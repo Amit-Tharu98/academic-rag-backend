@@ -67,7 +67,7 @@ from backend.comparison_service import (
 from backend.research_results_service import (
     ResearchResultsService,
 )
-
+from fastapi.middleware.cors import CORSMiddleware
 # --------------------------------------------------
 # FastAPI application
 # --------------------------------------------------
@@ -90,6 +90,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:4200",
+        "https://academic-rag-frontend.netlify.app",
+        "https://6aa81ca79cb84677d93e449d--academic-rag-frontend.netlify.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
