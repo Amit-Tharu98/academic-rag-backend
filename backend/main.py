@@ -91,8 +91,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:4200",
         "https://academic-rag-frontend.netlify.app",
-        "https://6aa81ca79cb84677d93e449d--academic-rag-frontend.netlify.app",
     ],
+    allow_origin_regex=r"https://.*--academic-rag-frontend\.netlify\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
