@@ -1,0 +1,4 @@
+model,rouge1,rouge2,rougeL,retrieval_time
+bge,0.4287,0.2194,0.3524,0.1029
+openai,0.4316,0.2283,0.3548,0.1869
+sentence_transformer,0.3941,0.1883,0.3132,0.0362

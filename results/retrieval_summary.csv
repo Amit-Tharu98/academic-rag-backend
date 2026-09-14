@@ -1,0 +1,4 @@
+model,precision@1,precision@3,precision@5,recall@1,recall@3,recall@5,top1_accuracy,top3_accuracy,top5_accuracy,reciprocal_rank,retrieval_time
+bge,0.2889,0.1593,0.1044,0.2889,0.4778,0.5222,0.2889,0.4778,0.5222,0.3828,0.0812
+openai,0.3,0.163,0.1222,0.3,0.4889,0.6111,0.3,0.4889,0.6111,0.405,0.2909
+sentence_transformer,0.1222,0.0815,0.0711,0.1222,0.2444,0.3556,0.1222,0.2444,0.3556,0.2015,0.0297
