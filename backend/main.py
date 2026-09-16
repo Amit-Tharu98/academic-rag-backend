@@ -92,9 +92,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:4200",
-        "https://academic-rag-frontend.netlify.app",
+        "https://academicrag.netlify.app",
     ],
-    allow_origin_regex=r"https://.*--academic-rag-frontend\.netlify\.app",
+    allow_origin_regex=r"https://.*--academicrag\.netlify\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
