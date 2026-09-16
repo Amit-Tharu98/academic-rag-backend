@@ -9,9 +9,9 @@ from src.retriever import AcademicRetriever
 
 def run_generation_evaluation():
 
-    # -------------------------------------------------
+   
     # Configuration
-    # -------------------------------------------------
+   
     models = [
         "sentence_transformer",
         "bge",
@@ -42,9 +42,9 @@ def run_generation_evaluation():
     print("FINAL GENERATION EVALUATION")
     print("=" * 80)
 
-    # -------------------------------------------------
+   
     # Load evaluation questions
-    # -------------------------------------------------
+   
     questions = pd.read_csv(
         evaluation_file,
         sep="\t",
@@ -90,17 +90,17 @@ def run_generation_evaluation():
         f"{len(questions) * len(models)}"
     )
 
-    # -------------------------------------------------
+   
     # Shared generator
-    # -------------------------------------------------
+   
     # Same LLM is used for every embedding model.
     generator = ResponseGenerator()
 
     all_results = []
 
-    # -------------------------------------------------
+   
     # Evaluate each embedding model
-    # -------------------------------------------------
+   
     for model_name in models:
 
         print("\n" + "=" * 80)
@@ -113,9 +113,9 @@ def run_generation_evaluation():
             model_name=model_name
         )
 
-        # ---------------------------------------------
+       
         # Evaluate every question
-        # ---------------------------------------------
+       
         for question_number, (
             _,
             row,
@@ -147,9 +147,9 @@ def run_generation_evaluation():
                 f"Question: {question}"
             )
 
-            # -----------------------------------------
+           
             # Retrieve top-k chunks
-            # -----------------------------------------
+           
             retrieval_output = (
                 retriever.retrieve(
                     query=question,
@@ -167,9 +167,9 @@ def run_generation_evaluation():
                 f"chunks."
             )
 
-            # -----------------------------------------
+           
             # Generate answer
-            # -----------------------------------------
+           
             generated_answer = (
                 generator.generate_answer(
                     question=question,
@@ -182,9 +182,9 @@ def run_generation_evaluation():
                 "Generated answer."
             )
 
-            # -----------------------------------------
+           
             # Calculate ROUGE
-            # -----------------------------------------
+           
             rouge_scores = (
                 calculate_rouge(
                     reference_answer=
@@ -209,18 +209,18 @@ def run_generation_evaluation():
                 f"{rouge_scores['rougeL']:.4f}"
             )
 
-            # -----------------------------------------
+           
             # Get retrieved chunk IDs
-            # -----------------------------------------
+           
             retrieved_ids = [
                 chunk["chunk_id"]
                 for chunk
                 in retrieved_chunks
             ]
 
-            # -----------------------------------------
+           
             # Store result
-            # -----------------------------------------
+           
             result = {
                 "model":
                     model_name,
@@ -301,9 +301,9 @@ def run_generation_evaluation():
                 result
             )
 
-            # -----------------------------------------
+           
             # Save progress after every question
-            # -----------------------------------------
+           
             pd.DataFrame(
                 all_results
             ).to_csv(
@@ -315,9 +315,9 @@ def run_generation_evaluation():
                 "Progress saved."
             )
 
-    # -------------------------------------------------
+   
     # Create final dataframe
-    # -------------------------------------------------
+   
     results_df = pd.DataFrame(
         all_results
     )
@@ -328,9 +328,9 @@ def run_generation_evaluation():
         index=False,
     )
 
-    # -------------------------------------------------
+   
     # Calculate average generation results
-    # -------------------------------------------------
+   
     summary_df = (
         results_df
         .groupby("model")[
@@ -345,9 +345,9 @@ def run_generation_evaluation():
         .round(4)
     )
 
-    # -------------------------------------------------
+   
     # Display results
-    # -------------------------------------------------
+   
     print("\n")
     print("=" * 80)
     print("AVERAGE GENERATION RESULTS")
@@ -357,9 +357,9 @@ def run_generation_evaluation():
         summary_df
     )
 
-    # -------------------------------------------------
+   
     # Save summary
-    # -------------------------------------------------
+   
     summary_df.to_csv(
         summary_file
     )

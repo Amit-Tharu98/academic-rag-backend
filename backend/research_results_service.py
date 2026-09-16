@@ -55,9 +55,9 @@ class ResearchResultsService:
 
         return dataframe
 
-    # --------------------------------------------------
+    
     # Retrieval summary
-    # --------------------------------------------------
+    
 
     def get_retrieval_summary(
         self,
@@ -71,9 +71,9 @@ class ResearchResultsService:
             RETRIEVAL_SUMMARY_FILE
         )
 
-        # --------------------------------------------------
+        
         # Handle model stored as CSV index
-        # --------------------------------------------------
+        
 
         if (
             "model"
@@ -103,9 +103,9 @@ class ResearchResultsService:
 
         return records
 
-    # --------------------------------------------------
+    
     # Generation summary
-    # --------------------------------------------------
+    
 
     def get_generation_summary(
         self,
@@ -147,9 +147,9 @@ class ResearchResultsService:
 
         return records
 
-    # --------------------------------------------------
+    
     # Detailed retrieval results
-    # --------------------------------------------------
+    
 
     def get_retrieval_results(
         self,
@@ -170,9 +170,9 @@ class ResearchResultsService:
             )
         )
 
-    # --------------------------------------------------
+    
     # Detailed generation results
-    # --------------------------------------------------
+    
 
     def get_generation_results(
         self,
@@ -193,9 +193,9 @@ class ResearchResultsService:
             )
         )
 
-    # --------------------------------------------------
+    
     # Research overview
-    # --------------------------------------------------
+    
 
     def get_overview(
         self,
@@ -222,9 +222,9 @@ class ResearchResultsService:
                 "No generation results found."
             )
 
-        # --------------------------------------------------
+        
         # Best retrieval models
-        # --------------------------------------------------
+        
 
         best_top5 = max(
             retrieval,
@@ -259,9 +259,9 @@ class ResearchResultsService:
                 ),
         )
 
-        # --------------------------------------------------
+        
         # Best generation models
-        # --------------------------------------------------
+        
 
         best_rouge1 = max(
             generation,

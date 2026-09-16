@@ -11,9 +11,9 @@ def validate_evaluation_dataset():
     print("VALIDATING FINAL EVALUATION DATASET")
     print("=" * 70)
 
-    # -------------------------------------------------
+  
     # 1. Load evaluation questions
-    # -------------------------------------------------
+  
     questions = pd.read_csv(
         EVALUATION_FILE,
         sep="\t"
@@ -23,9 +23,9 @@ def validate_evaluation_dataset():
 
     print(f"\nEvaluation questions loaded: {len(questions)}")
 
-    # -------------------------------------------------
+  
     # 2. Check required columns
-    # -------------------------------------------------
+  
     required_columns = {
         "question_id",
         "question",
@@ -42,9 +42,9 @@ def validate_evaluation_dataset():
 
     print("Required columns: OK")
 
-    # -------------------------------------------------
+  
     # 3. Load final chunk metadata
-    # -------------------------------------------------
+  
     with open(
         METADATA_FILE,
         "r",
@@ -60,9 +60,9 @@ def validate_evaluation_dataset():
         for item in metadata
     }
 
-    # -------------------------------------------------
+  
     # 4. Check duplicate question IDs
-    # -------------------------------------------------
+  
     duplicate_questions = questions[
         questions["question_id"].duplicated()
     ]
@@ -77,9 +77,9 @@ def validate_evaluation_dataset():
     else:
         print("Duplicate question IDs: None")
 
-    # -------------------------------------------------
+  
     # 5. Check empty values
-    # -------------------------------------------------
+  
     required_fields = [
         "question_id",
         "question",
@@ -105,9 +105,9 @@ def validate_evaluation_dataset():
                 f"Empty {column}: None"
             )
 
-    # -------------------------------------------------
+  
     # 6. Validate relevant chunk IDs
-    # -------------------------------------------------
+  
     missing_chunk_ids = []
 
     total_relevance_labels = 0
@@ -139,9 +139,9 @@ def validate_evaluation_dataset():
                         chunk_id,
                 })
 
-    # -------------------------------------------------
+  
     # 7. Final report
-    # -------------------------------------------------
+  
     print("\n" + "=" * 70)
     print("VALIDATION SUMMARY")
     print("=" * 70)

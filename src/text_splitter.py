@@ -30,16 +30,6 @@ def split_text(
     chunk_size: int = 800,
     chunk_overlap: int = 150,
 ) -> list[dict]:
-    """
-    Split PDF pages into overlapping chunks.
-
-    Each chunk ID includes:
-    - source PDF
-    - page number
-    - chunk number
-
-    This ensures unique chunk IDs across documents.
-    """
 
     if chunk_size <= 0:
         raise ValueError(

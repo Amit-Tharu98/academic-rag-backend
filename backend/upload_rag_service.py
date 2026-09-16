@@ -152,9 +152,9 @@ def build_uploaded_index(
         f"{len(chunks)}"
     )
 
-    # --------------------------------------------------
+    
     # Load embedding model
-    # --------------------------------------------------
+    
 
     embedding_model = (
         get_embedding_model(
@@ -162,9 +162,9 @@ def build_uploaded_index(
         )
     )
 
-    # --------------------------------------------------
+    
     # Generate document embeddings
-    # --------------------------------------------------
+    
 
     embeddings = (
         embedding_model
@@ -178,9 +178,9 @@ def build_uploaded_index(
         f"{embeddings.shape}"
     )
 
-    # --------------------------------------------------
+    
     # Build FAISS vector store
-    # --------------------------------------------------
+    
 
     vector_store = (
         FaissVectorStore()
@@ -191,9 +191,9 @@ def build_uploaded_index(
         metadata=chunks,
     )
 
-    # --------------------------------------------------
+    
     # Save temporary index
-    # --------------------------------------------------
+    
 
     index_folder = (
         get_index_folder(
@@ -247,9 +247,9 @@ def load_or_build_uploaded_index(
         / "metadata.json"
     )
 
-    # --------------------------------------------------
+    
     # Reuse existing index
-    # --------------------------------------------------
+    
 
     if (
         index_file.exists()
@@ -275,9 +275,9 @@ def load_or_build_uploaded_index(
 
         return vector_store
 
-    # --------------------------------------------------
+    
     # Build new index
-    # --------------------------------------------------
+    
 
     return build_uploaded_index(
         document_id=
@@ -316,17 +316,17 @@ def ask_uploaded_document(
             "top_k must be greater than zero."
         )
 
-    # --------------------------------------------------
+    
     # Confirm document exists
-    # --------------------------------------------------
+    
 
     load_uploaded_chunks(
         document_id
     )
 
-    # --------------------------------------------------
+    
     # Load selected embedding model
-    # --------------------------------------------------
+    
 
     embedding_model = (
         get_embedding_model(
@@ -334,9 +334,9 @@ def ask_uploaded_document(
         )
     )
 
-    # --------------------------------------------------
+    
     # Load/build temporary index
-    # --------------------------------------------------
+    
 
     vector_store = (
         load_or_build_uploaded_index(
@@ -348,17 +348,17 @@ def ask_uploaded_document(
         )
     )
 
-    # --------------------------------------------------
+    
     # Start retrieval timer
-    # --------------------------------------------------
+    
 
     start_time = (
         time.perf_counter()
     )
 
-    # --------------------------------------------------
+    
     # Generate query embedding
-    # --------------------------------------------------
+    
 
     query_embedding = (
         embedding_model
@@ -367,9 +367,9 @@ def ask_uploaded_document(
         )
     )
 
-    # --------------------------------------------------
+    
     # Search FAISS
-    # --------------------------------------------------
+    
 
     results = (
         vector_store.search(
@@ -392,9 +392,9 @@ def ask_uploaded_document(
             "were found."
         )
 
-    # --------------------------------------------------
+    
     # Prepare results
-    # --------------------------------------------------
+    
 
     prepared_results = []
 
@@ -438,9 +438,9 @@ def ask_uploaded_document(
             }
         )
 
-    # --------------------------------------------------
+    
     # Generate answer
-    # --------------------------------------------------
+    
 
     generator = (
         ResponseGenerator()
@@ -457,9 +457,9 @@ def ask_uploaded_document(
         )
     )
 
-    # --------------------------------------------------
+    
     # Calculate score summary
-    # --------------------------------------------------
+    
 
     similarity_scores = [
         item["score"]
@@ -486,9 +486,9 @@ def ask_uploaded_document(
         else None
     )
 
-    # --------------------------------------------------
+    
     # Return result
-    # --------------------------------------------------
+    
 
     return {
         "document_id":

@@ -10,9 +10,9 @@ EmbeddingModelName = Literal[
 ]
 
 
-# --------------------------------------------------
+
 # Ask Question
-# --------------------------------------------------
+
 
 class AskQuestionRequest(BaseModel):
     question: str = Field(
@@ -47,9 +47,9 @@ class AskQuestionResponse(BaseModel):
     average_similarity_score: float | None = None
 
 
-# --------------------------------------------------
+
 # Compare Models
-# --------------------------------------------------
+
 
 class CompareRequest(BaseModel):
     question: str = Field(
@@ -84,7 +84,8 @@ class CompareResponse(BaseModel):
 
 class UploadResponse(BaseModel):
     document_id: str
-    filename: str
+    filenames: list[str]
+    document_count: int
     pages: int
     chunks: int
     chunk_size: int
@@ -213,6 +214,9 @@ class SummarySourceResult(BaseModel):
 
 class UploadSummaryResponse(BaseModel):
     document_id: str
+
+    filenames: list[str] | None = None
+    document_count: int | None = None
 
     summary_type: str
     summary_length: str

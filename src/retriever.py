@@ -49,9 +49,9 @@ class AcademicRetriever:
             f"{self.vector_store.index.ntotal}"
         )
 
-    # --------------------------------------------------
+    
     # Normalise individual search result
-    # --------------------------------------------------
+    
 
     def _prepare_result(
         self,
@@ -63,9 +63,9 @@ class AcademicRetriever:
         consistent format expected by the API.
         """
 
-        # --------------------------------------------------
+        
         # Find similarity score
-        # --------------------------------------------------
+        
 
         score = None
 
@@ -96,9 +96,9 @@ class AcademicRetriever:
                 "'similarity', or 'distance'."
             )
 
-        # --------------------------------------------------
+        
         # Validate required metadata
-        # --------------------------------------------------
+        
 
         required_fields = [
             "chunk_id",
@@ -116,9 +116,9 @@ class AcademicRetriever:
                     f"required field: {field}"
                 )
 
-        # --------------------------------------------------
+        
         # Standard result format
-        # --------------------------------------------------
+        
 
         return {
             "rank": rank,
@@ -138,9 +138,9 @@ class AcademicRetriever:
                 score,
         }
 
-    # --------------------------------------------------
+    
     # Retrieve
-    # --------------------------------------------------
+    
 
     def retrieve(
         self,
@@ -158,9 +158,9 @@ class AcademicRetriever:
             }
         """
 
-        # --------------------------------------------------
+        
         # Validation
-        # --------------------------------------------------
+        
 
         if not query.strip():
 
@@ -174,17 +174,17 @@ class AcademicRetriever:
                 "top_k must be greater than 0."
             )
 
-        # --------------------------------------------------
+        
         # Start timing
-        # --------------------------------------------------
+        
 
         start_time = (
             time.perf_counter()
         )
 
-        # --------------------------------------------------
+        
         # Generate query embedding
-        # --------------------------------------------------
+        
 
         query_embedding = (
             self.embedding_model
@@ -193,9 +193,9 @@ class AcademicRetriever:
             )
         )
 
-        # --------------------------------------------------
+        
         # Search FAISS
-        # --------------------------------------------------
+        
 
         raw_results = (
             self.vector_store.search(
@@ -206,9 +206,9 @@ class AcademicRetriever:
             )
         )
 
-        # --------------------------------------------------
+        
         # Standardise search results
-        # --------------------------------------------------
+        
 
         results = []
 
@@ -228,9 +228,9 @@ class AcademicRetriever:
                 prepared_result
             )
 
-        # --------------------------------------------------
+        
         # End timing
-        # --------------------------------------------------
+        
 
         end_time = (
             time.perf_counter()
@@ -240,9 +240,9 @@ class AcademicRetriever:
             end_time - start_time
         )
 
-        # --------------------------------------------------
+        
         # Return retrieval information
-        # --------------------------------------------------
+        
 
         return {
             "model":
@@ -254,3 +254,4 @@ class AcademicRetriever:
             "results":
                 results,
         }
+        

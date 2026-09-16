@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -68,9 +70,9 @@ from backend.research_results_service import (
     ResearchResultsService,
 )
 from fastapi.middleware.cors import CORSMiddleware
-# --------------------------------------------------
+
 # FastAPI application
-# --------------------------------------------------
+
 
 app = FastAPI(
     title="Academic RAG API",
@@ -82,9 +84,9 @@ app = FastAPI(
 )
 
 
-# --------------------------------------------------
+
 # CORS
-# --------------------------------------------------
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -99,15 +101,15 @@ app.add_middleware(
 )
 
 
-# --------------------------------------------------
+
 # Shared generator
-# --------------------------------------------------
+
 
 generator = ResponseGenerator()
 
-# --------------------------------------------------
+
 # Shared summary service
-# --------------------------------------------------
+
 
 summary_service = DocumentSummaryService()
 
@@ -116,9 +118,9 @@ research_results_service = (
     ResearchResultsService()
 )
 
-# --------------------------------------------------
+
 # Retriever cache
-# --------------------------------------------------
+
 
 retrievers = {}
 
@@ -143,9 +145,9 @@ def get_retriever(
     return retrievers[model_name]
 
 
-# --------------------------------------------------
+
 # Helper: convert retrieved chunks into sources
-# --------------------------------------------------
+
 
 def prepare_sources(
     retrieved_chunks: list[dict],
@@ -176,9 +178,9 @@ def prepare_sources(
     return sources
 
 
-# --------------------------------------------------
+
 # Root
-# --------------------------------------------------
+
 
 @app.get("/")
 def root():
@@ -189,9 +191,9 @@ def root():
     }
 
 
-# --------------------------------------------------
+
 # Health check
-# --------------------------------------------------
+
 
 @app.get("/api/health")
 def health_check():
@@ -201,9 +203,9 @@ def health_check():
     }
 
 
-# --------------------------------------------------
+
 # Ask Question
-# --------------------------------------------------
+
 
 @app.post(
     "/api/ask",
@@ -260,9 +262,9 @@ def ask_question(
             retrieved_chunks
         )
 
-        # -----------------------------------------
+       
         # Calculate similarity statistics
-        # -----------------------------------------
+       
 
         scores = [
             float(source.score)
@@ -282,9 +284,9 @@ def ask_question(
             else None
         )
 
-        # -----------------------------------------
+       
         # Return response
-        # -----------------------------------------
+       
 
         return AskQuestionResponse(
 
@@ -324,9 +326,9 @@ def ask_question(
         )
 
 
-# --------------------------------------------------
+
 # Compare all embedding models
-# --------------------------------------------------
+
 
 @app.post(
     "/api/compare",
@@ -357,17 +359,17 @@ def compare_models(
                 f"{model_name}"
             )
 
-            # --------------------------------------
+            
             # Load / get cached retriever
-            # --------------------------------------
+            
 
             retriever = get_retriever(
                 model_name
             )
 
-            # --------------------------------------
+            
             # Retrieve chunks
-            # --------------------------------------
+            
 
             retrieval_output = (
                 retriever.retrieve(
@@ -383,9 +385,9 @@ def compare_models(
             if not retrieved_chunks:
                 continue
 
-            # --------------------------------------
+            
             # Generate answer
-            # --------------------------------------
+            
 
             answer = (
                 generator.generate_answer(
@@ -395,17 +397,17 @@ def compare_models(
                 )
             )
 
-            # --------------------------------------
+            
             # Prepare sources
-            # --------------------------------------
+            
 
             sources = prepare_sources(
                 retrieved_chunks
             )
 
-            # --------------------------------------
+            
             # Similarity scores
-            # --------------------------------------
+            
 
             scores = [
                 float(
@@ -431,9 +433,9 @@ def compare_models(
                 top_similarity_score = None
                 average_similarity_score = None
 
-            # --------------------------------------
+            
             # Store model result
-            # --------------------------------------
+            
 
             comparison_results.append(
                 ModelComparisonResult(
@@ -493,135 +495,208 @@ def compare_models(
             detail=str(error),
         )
 
-# --------------------------------------------------
-# Upload PDF
-# --------------------------------------------------
+
+# Upload PDF Collection
+
+
+MAX_UPLOAD_FILES = 10
+MAX_UPLOAD_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+MAX_UPLOAD_TOTAL_SIZE = 50 * 1024 * 1024  # 50 MB
 
 @app.post(
     "/api/upload",
     response_model=UploadResponse,
 )
-def upload_pdf(
-    file: UploadFile = File(...),
+def upload_pdfs(
+    files: list[UploadFile] = File(...),
 ):
+    """
+    Process one or more PDFs as a single temporary collection.
+
+    Every uploaded PDF is chunked with the same settings. The chunks are
+    combined under one document_id so the existing retrieval endpoints can
+    search the whole collection without changing their request format.
+    """
 
     try:
+        if not files:
+            raise HTTPException(
+                status_code=400,
+                detail="At least one PDF document is required.",
+            )
 
-        # ------------------------------------------
-        # Validate filename
-        # ------------------------------------------
-
-        if not file.filename:
-
+        if len(files) > MAX_UPLOAD_FILES:
             raise HTTPException(
                 status_code=400,
                 detail=(
-                    "A PDF file is required."
+                    f"A maximum of {MAX_UPLOAD_FILES} PDF documents "
+                    "can be uploaded per collection."
                 ),
             )
 
-        filename = (
-            file.filename.strip()
-        )
+        filenames = []
+        total_upload_size = 0
 
-        # ------------------------------------------
-        # Validate extension
-        # ------------------------------------------
+        for file in files:
+            if not file.filename:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Every uploaded document must have a filename.",
+                )
 
-        if not filename.lower().endswith(
-            ".pdf"
-        ):
+            filename = file.filename.strip()
 
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    "Only PDF files are supported."
-                ),
-            )
+            if not filename.lower().endswith(".pdf"):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Only PDF files are supported: {filename}",
+                )
 
-        # ------------------------------------------
-        # Validate MIME type
-        # ------------------------------------------
+            if (
+                file.content_type
+                and file.content_type != "application/pdf"
+            ):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Uploaded file must be a PDF document: {filename}",
+                )
 
-        if (
-            file.content_type
-            and file.content_type
-            != "application/pdf"
-        ):
+            # Validate the actual uploaded file size on the server.
+            file.file.seek(0, 2)
+            file_size = file.file.tell()
+            file.file.seek(0)
 
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    "Uploaded file must be "
-                    "a PDF document."
-                ),
-            )
+            if file_size == 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Uploaded PDF is empty: {filename}",
+                )
 
-        # ------------------------------------------
-        # Generate document ID
-        # ------------------------------------------
+            if file_size > MAX_UPLOAD_FILE_SIZE:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"{filename} exceeds the 10 MB file-size limit.",
+                )
 
-        document_id = (
-            create_document_id()
-        )
+            total_upload_size += file_size
 
-        # ------------------------------------------
-        # Save uploaded PDF
-        # ------------------------------------------
+            if total_upload_size > MAX_UPLOAD_TOTAL_SIZE:
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        "The uploaded documents exceed the "
+                        "50 MB collection limit."
+                    ),
+                )
 
-        pdf_path = (
-            save_uploaded_pdf(
+            filenames.append(filename)
+
+        document_id = create_document_id()
+        collection_chunks = []
+        total_pages = 0
+        chunk_size = 800
+        chunk_overlap = 150
+
+        for file, filename in zip(files, filenames):
+            pdf_path = save_uploaded_pdf(
                 file_object=file.file,
                 filename=filename,
-                document_id=
-                    document_id,
+                document_id=document_id,
             )
-        )
 
-        # ------------------------------------------
-        # Extract + chunk
-        # ------------------------------------------
-
-        metadata = (
-            process_uploaded_pdf(
+            metadata = process_uploaded_pdf(
                 pdf_path=pdf_path,
-                original_filename=
-                    filename,
-                document_id=
-                    document_id,
-
-                chunk_size=800,
-                chunk_overlap=150,
+                original_filename=filename,
+                document_id=document_id,
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
             )
+
+            total_pages += int(metadata.get("pages", 0))
+
+            chunks_path = (
+                Path("temp_uploads")
+                / document_id
+                / "chunks.json"
+            )
+
+            with open(
+                chunks_path,
+                "r",
+                encoding="utf-8",
+            ) as chunk_file:
+                file_chunks = json.load(chunk_file)
+
+            collection_chunks.extend(file_chunks)
+
+        # Re-number chunk IDs where necessary so every chunk in the
+        # collection has a unique identifier.
+        for index, chunk in enumerate(collection_chunks, start=1):
+            chunk["chunk_id"] = (
+                f"{document_id}_C{index:05d}"
+            )
+
+        collection_folder = (
+            Path("temp_uploads")
+            / document_id
         )
 
-        # ------------------------------------------
-        # Return response
-        # ------------------------------------------
+        with open(
+            collection_folder / "chunks.json",
+            "w",
+            encoding="utf-8",
+        ) as chunk_file:
+            json.dump(
+                collection_chunks,
+                chunk_file,
+                ensure_ascii=False,
+                indent=2,
+            )
 
-        return UploadResponse(
-            **metadata
-        )
+        collection_metadata = {
+            "document_id": document_id,
+            "filenames": filenames,
+            "document_count": len(filenames),
+            "pages": total_pages,
+            "chunks": len(collection_chunks),
+            "chunk_size": chunk_size,
+            "chunk_overlap": chunk_overlap,
+            "status": "processed",
+        }
+
+        with open(
+            collection_folder / "document.json",
+            "w",
+            encoding="utf-8",
+        ) as metadata_file:
+            json.dump(
+                collection_metadata,
+                metadata_file,
+                ensure_ascii=False,
+                indent=2,
+            )
+
+        return UploadResponse(**collection_metadata)
 
     except HTTPException:
         raise
 
     except Exception as error:
-
         raise HTTPException(
             status_code=500,
             detail=str(error),
         )
 
-# --------------------------------------------------
-# Ask Uploaded PDF
-# --------------------------------------------------
+
+
+# Ask Uploaded Collection
+
 
 @app.post(
     "/api/upload/ask",
     response_model=UploadAskResponse,
 )
-def ask_uploaded_pdf(
+def ask_uploaded_collection(
     request: UploadAskRequest,
 ):
 
@@ -703,15 +778,15 @@ def ask_uploaded_pdf(
             detail=str(error),
         )
 
-# --------------------------------------------------
-# Compare Models on Uploaded PDF
-# --------------------------------------------------
+
+# Compare Models on Uploaded Collection
+
 
 @app.post(
     "/api/upload/compare",
     response_model=UploadCompareResponse,
 )
-def compare_uploaded_pdf(
+def compare_uploaded_collection(
     request: UploadCompareRequest,
 ):
 
@@ -729,9 +804,9 @@ def compare_uploaded_pdf(
 
         comparison_results = []
 
-        # ------------------------------------------
+       
         # Run same question through all models
-        # ------------------------------------------
+       
 
         for model_name in models:
 
@@ -765,9 +840,9 @@ def compare_uploaded_pdf(
                 )
             )
 
-            # --------------------------------------
+            
             # Convert retrieved results to sources
-            # --------------------------------------
+            
 
             sources = []
 
@@ -793,9 +868,9 @@ def compare_uploaded_pdf(
                     )
                 )
 
-            # --------------------------------------
+            
             # Store model comparison result
-            # --------------------------------------
+            
 
             comparison_results.append(
                 UploadModelComparisonResult(
@@ -831,9 +906,9 @@ def compare_uploaded_pdf(
                 )
             )
 
-        # ------------------------------------------
+       
         # Return comparison
-        # ------------------------------------------
+       
 
         comparison_summary = (
             comparison_service
@@ -871,23 +946,23 @@ def compare_uploaded_pdf(
             detail=str(error),
         )
 
-# --------------------------------------------------
-# Summarise Uploaded PDF
-# --------------------------------------------------
+
+# Summarise Uploaded Collection
+
 
 @app.post(
     "/api/upload/summary",
     response_model=UploadSummaryResponse,
 )
-def summarise_uploaded_pdf(
+def summarise_uploaded_collection(
     request: UploadSummaryRequest,
 ):
 
     try:
 
-        # ------------------------------------------
+       
         # Full paper
-        # ------------------------------------------
+       
 
         if (
             request.summary_type
@@ -911,9 +986,14 @@ def summarise_uploaded_pdf(
                         "document_id"
                     ],
 
-                filename=
+                filenames=
                     output[
-                        "filename"
+                        "filenames"
+                    ],
+
+                document_count=
+                    output[
+                        "document_count"
                     ],
 
                 summary_type=
@@ -944,9 +1024,9 @@ def summarise_uploaded_pdf(
                 sources=[],
             )
 
-        # ------------------------------------------
+       
         # Topic focused
-        # ------------------------------------------
+       
 
         if (
             request.summary_type
@@ -1072,15 +1152,15 @@ def summarise_uploaded_pdf(
             detail=str(error),
         )
 
-# --------------------------------------------------
+
 # Compare Topic-Focused Summaries
-# --------------------------------------------------
+
 
 @app.post(
     "/api/upload/summary/compare",
     response_model=UploadSummaryCompareResponse,
 )
-def compare_uploaded_pdf_summaries(
+def compare_uploaded_collection_summaries(
     request: UploadSummaryCompareRequest,
 ):
 
@@ -1228,9 +1308,9 @@ def compare_uploaded_pdf_summaries(
             detail=str(error),
         )
 
-# --------------------------------------------------
+
 # Research Overview
-# --------------------------------------------------
+
 
 @app.get(
     "/api/research/overview",
@@ -1260,9 +1340,9 @@ def research_overview():
             detail=str(error),
         )
 
-# --------------------------------------------------
+
 # Research Retrieval Results
-# --------------------------------------------------
+
 
 @app.get(
     "/api/research/retrieval"
@@ -1298,9 +1378,9 @@ def research_retrieval():
             detail=str(error),
         )
 
-# --------------------------------------------------
+
 # Research Generation Results
-# --------------------------------------------------
+
 
 @app.get(
     "/api/research/generation"
