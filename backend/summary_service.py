@@ -289,10 +289,11 @@ Section summaries:
             embedding_model_name
         )
 
-        # Load or build the FAISS index for this collection.
+        # Reuse the same embedding model when index construction is required.
         vector_store = load_or_build_uploaded_index(
             document_id=document_id,
             model_name=embedding_model_name,
+            embedding_model=embedding_model,
         )
 
         # Measure embedding + retrieval time.

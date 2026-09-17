@@ -106,6 +106,7 @@ def load_uploaded_chunks(
 def build_uploaded_index(
     document_id: str,
     model_name: str,
+    embedding_model=None,
 ) -> FaissVectorStore:
     """
     Build and save a temporary FAISS index
@@ -155,12 +156,12 @@ def build_uploaded_index(
     
     # Load embedding model
     
-
-    embedding_model = (
-        get_embedding_model(
-            model_name
+    if embedding_model is None:
+        embedding_model = (
+            get_embedding_model(
+                model_name
+            )
         )
-    )
 
     
     # Generate document embeddings
@@ -224,6 +225,7 @@ def build_uploaded_index(
 def load_or_build_uploaded_index(
     document_id: str,
     model_name: str,
+    embedding_model=None,
 ) -> FaissVectorStore:
     """
     Load cached temporary index if it already exists.
@@ -285,6 +287,8 @@ def load_or_build_uploaded_index(
 
         model_name=
             model_name,
+        embedding_model=
+            embedding_model,
     )
 
 
@@ -345,6 +349,8 @@ def ask_uploaded_document(
 
             model_name=
                 model_name,
+            embedding_model=
+                embedding_model,
         )
     )
 

@@ -1,5 +1,6 @@
 import os
 from abc import ABC, abstractmethod
+from functools import lru_cache
 
 import numpy as np
 from dotenv import load_dotenv
@@ -258,11 +259,15 @@ class OpenAIEmbedding(BaseEmbeddingModel):
         )
 
 
+@lru_cache(maxsize=3)
 def get_embedding_model(
     model_name: str,
 ) -> BaseEmbeddingModel:
     """
-    Return the requested embedding model.
+    Return a cached embedding model instance.
+
+    Each embedding model is loaded only once per application
+    process and reused by subsequent requests.
     """
 
     if model_name == "sentence_transformer":
